@@ -1,0 +1,62 @@
+package com.edts.edts_ticketing_system.service;
+
+import com.edts.edts_ticketing_system.model.Booking;
+import com.edts.edts_ticketing_system.model.TicketCategory;
+import com.edts.edts_ticketing_system.repository.BookingRepository;
+import com.edts.edts_ticketing_system.repository.TicketCategoryRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+
+@Service
+public class BookingService {
+    private final TicketCategoryRepository ticketCategoryRepository;
+    private final BookingRepository bookingRepository;
+
+    public BookingService(TicketCategoryRepository ticketCategoryRepository, BookingRepository bookingRepository) {
+        this.ticketCategoryRepository = ticketCategoryRepository;
+        this.bookingRepository = bookingRepository;
+    }
+
+    /**
+     * Handles ticket booking with pessimistic locking to prevent race conditions and overselling.
+     */
+
+    @Transactional
+    public Booking bookTicket(Long ticketCategoryId, String userId, Integer quantity) {
+
+        // 1. Fetch ticket category with Pessimistic Lock (SELECT ... FOR UPDATE)
+        TicketCategory category = ticketCategoryRepository.findByIdWithLock(ticketCategoryId)
+                .orElseThrow(() -> new RuntimeException("Ticket category not found"));
+
+        // 2. Validate booking time window
+        LocalDateTime now = LocalDateTime.now();
+        if (category.getBookingStartTime() != null && now.isBefore(category.getBookingStartTime())) {
+            throw new RuntimeException("Booking has not started yet");
+        }
+        if (category.getBookingEndTime() != null && now.isAfter(category.getBookingEndTime())) {
+            throw new RuntimeException("Booking window has closed");
+        }
+
+        // 3. Validate available quota
+        if (category.getAvailableQuota() < quantity) {
+            throw new RuntimeException("Insufficient ticket quota available");
+        }
+
+        // 4. Deduct quota
+        category.setAvailableQuota(category.getAvailableQuota() - quantity);
+        ticketCategoryRepository.save(category);
+
+        // 5. Create and save booking record
+        Booking booking = Booking.builder()
+                .userId(userId)
+                .ticketCategory(category)
+                .quantity(quantity)
+                .bookingTime(now)
+                .status("SUCCESS")
+                .build();
+
+        return bookingRepository.save(booking);
+    }
+}
