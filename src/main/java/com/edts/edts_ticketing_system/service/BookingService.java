@@ -8,6 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.edts.edts_ticketing_system.dto.BookingResponse;
 
 @Service
 public class BookingService {
@@ -58,5 +62,19 @@ public class BookingService {
                 .build();
 
         return bookingRepository.save(booking);
+    }
+
+    public List<BookingResponse> getAllBookings() {
+        return bookingRepository.findAll().stream()
+                .map(booking -> BookingResponse.builder()
+                        .bookingId(booking.getId())
+                        .userId(booking.getUserId())
+                        .concertName(booking.getTicketCategory().getConcert().getName())
+                        .categoryName(booking.getTicketCategory().getName())
+                        .quantity(booking.getQuantity())
+                        .bookingTime(booking.getBookingTime())
+                        .status(booking.getStatus())
+                        .build())
+                .collect(Collectors.toList());
     }
 }
