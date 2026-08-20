@@ -7,12 +7,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 public class BookingServiceConcurrencyTest {
@@ -57,5 +59,24 @@ public class BookingServiceConcurrencyTest {
         assertEquals(50, successfulBookings.get(), "Exactly 50 bookings should be successful");
         assertEquals(50, failedBookings.get(), "Exactly 50 bookings should fail due to quota exhaustion");
         assertEquals(0, updatedCategory.getAvailableQuota(), "Remaining available quota in DB must be exactly 0");
+    }
+
+    @Test
+    @DisplayName("Should reject booking attempts outside the designated time window")
+    void testBookingOutsideTimeWindowShouldFail() {
+        // Retrieve valid ticket category instance from database
+        Long ticketCategoryId = 1L;
+        TicketCategory category = ticketCategoryRepository.findById(ticketCategoryId).orElseThrow();
+
+        // Temporarily shift the booking window to simulate an expired window scenario
+        category.setBookingStartTime(LocalDateTime.now().minusHours(2));
+        category.setBookingEndTime(LocalDateTime.now().minusHours(1));
+        ticketCategoryRepository.save(category);
+
+        // Assert that initiating a transaction outside the active window throws an exception
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> bookingService.bookTicket(ticketCategoryId, "user-expired-test", 1));
+
+        assertEquals("Booking window has closed", exception.getMessage());
     }
 }

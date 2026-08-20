@@ -27,6 +27,10 @@ public class TicketCategory {
     private Integer availableQuota;
 
     // Defines the valid time window for ticket purchasing
+    @Column(name = "booking_start_time")
     private LocalDateTime bookingStartTime;
+
+    @Column(name = "booking_end_time")
     private LocalDateTime bookingEndTime;
+
 }
