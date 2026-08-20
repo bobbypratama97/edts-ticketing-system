@@ -37,7 +37,11 @@ High-concurrency RESTful API for concert ticket booking built with Spring Boot 3
    cd edts-ticketing-system
 
 2. Run the Spring Boot application:
-   ./mvnw spring-boot:run
+   * Option A (via Terminal / CLI):
+     ./mvnw spring-boot:run
+
+   * Option B (via IDE):
+     Open project in IntelliJ IDEA, locate `EdtsTicketingSystemApplication.java`, and click Run.
 
    (The application will automatically start on http://localhost:8080 and seed dummy concert data)
 
