@@ -2,6 +2,7 @@ package com.edts.edts_ticketing_system.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -20,8 +21,8 @@ public class TicketCategory {
     @JoinColumn(name = "concert_id", nullable = false)
     private Concert concert;
 
-    private String categoryName;
-    private Double price;
+    private String name;
+    private BigDecimal price;
     private Integer totalQuota;
     private Integer availableQuota;
 

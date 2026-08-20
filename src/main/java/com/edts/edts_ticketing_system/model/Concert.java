@@ -2,6 +2,7 @@ package com.edts.edts_ticketing_system.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -19,6 +20,7 @@ public class Concert {
     private String name;
     private String artist;
     private String location;
+    private LocalDateTime concertDate;
 
     @OneToMany(mappedBy = "concert", cascade = CascadeType.ALL)
 
