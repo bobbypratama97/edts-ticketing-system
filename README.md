@@ -31,29 +31,44 @@ The database schema is normalized and designed with high-concurrency constraints
 
 ### Entity Relationship Diagram (ERD) Overview
 
-1. `concerts`
-    - `id` (BIGINT, PK, Auto Increment)
-    - `name` (VARCHAR)
-    - `artist` (VARCHAR)
-    - `venue` (VARCHAR)
-    - `concert_date` (TIMESTAMP)
+```mermaid
+erDiagram
+    CONCERTS ||--o{ TICKET_CATEGORIES : "has"
+    TICKET_CATEGORIES ||--o{ BOOKINGS : "reserved in"
 
-2. `ticket_categories`
-    - `id` (BIGINT, PK, Auto Increment)
-    - `concert_id` (BIGINT, FK -> concerts.id)
-    - `name` (VARCHAR) - e.g., 'CAT 1 VIP', 'VIP Standing'
-    - `price` (DECIMAL)
-    - `available_quota` (INT) - Managed under Pessimistic DB Lock
-    - `booking_start_time` (TIMESTAMP) - Ticket sales opening time
-    - `booking_end_time` (TIMESTAMP) - Ticket sales closing time
+    CONCERTS {
+        bigint id PK
+        string name
+        string artist
+        string location
+        timestamp concert_date
+    }
 
-3. `bookings`
-    - `id` (BIGINT, PK, Auto Increment)
-    - `ticket_category_id` (BIGINT, FK -> ticket_categories.id)
-    - `user_id` (VARCHAR)
-    - `quantity` (INT)
-    - `booking_time` (TIMESTAMP)
+    TICKET_CATEGORIES {
+        bigint id PK
+        bigint concert_id FK
+        string name
+        decimal price
+        int total_quota
+        int available_quota
+        timestamp booking_start_time
+        timestamp booking_end_time
+    }
 
+    BOOKINGS {
+        bigint id PK
+        bigint ticket_category_id FK
+        string user_id
+        int quantity
+        timestamp booking_time
+        string status
+    }
+```
+### Database Structure Explanation
+
+1. **`concerts`**: Stores master data for concert events (e.g., event name, artist, venue location, and event date).
+2. **`ticket_categories`**: Holds ticket tier details (e.g., VIP, CAT 1) linked to a concert (`concert_id`). Includes `available_quota` managed via Pessimistic Locking to ensure concurrency safety, alongside `booking_start_time` and `booking_end_time` to enforce the booking time window constraint.
+3. **`bookings`**: Stores completed reservation transactions linked to a ticket category (`ticket_category_id`), capturing `user_id`, quantity booked, execution timestamp, and transaction status.
 ---
 
 ## Getting Started
