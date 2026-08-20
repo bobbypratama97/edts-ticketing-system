@@ -14,7 +14,7 @@ VALUES (2, 1, 'CAT 2 - Festival', 2500000.00, 500, 500, '2026-01-01 00:00:00', '
 
 -- Seed Ticket Categories for aespa (Concert ID 2)
 INSERT INTO ticket_categories (id, concert_id, name, price, total_quota, available_quota, booking_start_time, booking_end_time)
-VALUES (3, 2, 'VIP Standing (Soundcheck)', 3200000.00, 50, 50, '2026-01-01 00:00:00', '2026-12-31 23:59:59');
+VALUES (3, 2, 'VIP Standing (Soundcheck)', 3200000.00, 10000, 10000, '2026-01-01 00:00:00', '2026-12-31 23:59:59');
 
 INSERT INTO ticket_categories (id, concert_id, name, price, total_quota, available_quota, booking_start_time, booking_end_time)
 VALUES (4, 2, 'CAT 1 Seated', 2100000.00, 200, 200, '2026-01-01 00:00:00', '2026-12-31 23:59:59');

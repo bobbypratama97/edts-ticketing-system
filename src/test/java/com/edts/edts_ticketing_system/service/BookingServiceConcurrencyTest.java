@@ -11,10 +11,12 @@ import java.time.LocalDateTime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 public class BookingServiceConcurrencyTest {
@@ -28,10 +30,9 @@ public class BookingServiceConcurrencyTest {
     @Test
     @DisplayName("Should handle concurrent booking requests without race conditions")
     void testConcurrentBookingSuccessAndQuotaLimit() throws InterruptedException {
-        // Target Ticket Category ID 3 (Initial Quota: 50)
         Long ticketCategoryId = 3L;
-        int numberOfThreads = 100; // Simulate 100 concurrent users attempting to book tickets
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        int numberOfThreads = 100000;
+        ExecutorService executorService = Executors.newFixedThreadPool(100);
         CountDownLatch latch = new CountDownLatch(1);
 
         AtomicInteger successfulBookings = new AtomicInteger(0);
@@ -51,13 +52,15 @@ public class BookingServiceConcurrencyTest {
         }
 
         latch.countDown(); // Release the latch to initiate concurrent execution across all threads
-        Thread.sleep(5000); // Allow sufficient time for all asynchronous threads to complete
+        executorService.shutdown();
+        boolean completedInTime = executorService.awaitTermination(60, TimeUnit.SECONDS);
+        assertTrue(completedInTime, "All booking threads should finish within the timeout");
 
         TicketCategory updatedCategory = ticketCategoryRepository.findById(ticketCategoryId).orElseThrow();
 
-        // Verification: Out of 100 requests for 50 tickets, exactly 50 must succeed, 50 must fail, and final quota must be 0
-        assertEquals(50, successfulBookings.get(), "Exactly 50 bookings should be successful");
-        assertEquals(50, failedBookings.get(), "Exactly 50 bookings should fail due to quota exhaustion");
+        // Verification: Out of 100,000 requests for 10,000 tickets, exactly 10,000 must succeed, the rest must fail
+        assertEquals(10000, successfulBookings.get(), "Exactly 10,000 bookings should be successful");
+        assertEquals(90000, failedBookings.get(), "Exactly 90,000 bookings should fail due to quota exhaustion");
         assertEquals(0, updatedCategory.getAvailableQuota(), "Remaining available quota in DB must be exactly 0");
     }
 
