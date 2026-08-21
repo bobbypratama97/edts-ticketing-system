@@ -111,11 +111,12 @@ Interactive Swagger UI is available at:
       ```json
       {
         "ticketCategoryId": 3,
-        "userId": "user-123",
+        "userId": "bobbypratama97",
         "quantity": 1
       }
       ```
     - Description: Purchase tickets. Enforces race-condition locking and booking time window checks.
+    - Returns 404 if the ticket category doesn't exist, 400 for closed/not-yet-open booking windows or insufficient quota.
 
 3. Get All Bookings
     - Endpoint: `GET /api/bookings`
