@@ -6,6 +6,8 @@ import com.edts.edts_ticketing_system.repository.BookingRepository;
 import com.edts.edts_ticketing_system.repository.TicketCategoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,22 +32,22 @@ public class BookingService {
     @Transactional
     public Booking bookTicket(Long ticketCategoryId, String userId, Integer quantity) {
 
-        // 1. Fetch ticket category with Pessimistic Lock (SELECT ... FOR UPDATE)
+        // 1. Fetch ticket category
         TicketCategory category = ticketCategoryRepository.findByIdWithLock(ticketCategoryId)
-                .orElseThrow(() -> new RuntimeException("Ticket category not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket category not found"));
 
         // 2. Validate booking time window
         LocalDateTime now = LocalDateTime.now();
         if (category.getBookingStartTime() != null && now.isBefore(category.getBookingStartTime())) {
-            throw new RuntimeException("Booking has not started yet");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking has not started yet");
         }
         if (category.getBookingEndTime() != null && now.isAfter(category.getBookingEndTime())) {
-            throw new RuntimeException("Booking window has closed");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking window has closed");
         }
 
         // 3. Validate available quota
         if (category.getAvailableQuota() < quantity) {
-            throw new RuntimeException("Insufficient ticket quota available");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient ticket quota available");
         }
 
         // 4. Deduct quota
