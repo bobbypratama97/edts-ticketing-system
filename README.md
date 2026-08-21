@@ -7,7 +7,7 @@ High-concurrency RESTful API for concert ticket booking built with Spring Boot 3
 ## Tech Stack
 
 * Java: 17
-* Framework: Spring Boot 3.x
+* Framework: Spring Boot 4.1.0
 * Database: H2 In-Memory Database (MySQL/PostgreSQL compliant schema via Hibernate Dialect)
 * ORM: Spring Data JPA / Hibernate
 * Documentation: OpenAPI 3.0 / Swagger UI
